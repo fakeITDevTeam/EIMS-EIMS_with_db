@@ -1,0 +1,62 @@
+﻿<div class="form-group">
+    <label>Inventories</label>
+    <ViewInventoriesComponent 
+        DisplaySearchResult="true"
+        OnSelectInventory="OnSelectInventory">
+
+    </ViewInventoriesComponent>
+</div>
+@if (_productInventories != null && _productInventories.Count > 0)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Quantity</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var productInventory in _productInventories)
+            {
+                <tr>
+                    <td>@productInventory.Inventory.InventoryName &nbsp; </td>                    
+                    <td>
+                        <input type="number" min="0" @bind-value="productInventory.InventoryQuantity" 
+                            @bind-value:event="oninput" @onchange="OnInventoryQtyChanged" /> 
+                    </td>
+                    <td><button class="btn btn-link" type="button" @onclick="@(()=>RemoveInventory(productInventory))">Remove</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@code {
+
+    [Parameter]
+    public EventCallback<List<ProductInventory>> OnInventorySelected { get; set; }
+
+    [Parameter]
+    public List<ProductInventory> _productInventories { get; set; } = new List<ProductInventory>();
+
+    private async Task OnInventoryQtyChanged()
+    {
+        await OnInventorySelected.InvokeAsync(_productInventories);
+    }
+
+    private async Task OnSelectInventory(Inventory inventory)
+    {
+        if (!_productInventories.Any(x => x.Inventory.InventoryName.Equals(inventory.InventoryName, StringComparison.OrdinalIgnoreCase)))
+        {
+            _productInventories.Add(new ProductInventory { InventoryId = inventory.InventoryId, Inventory = inventory});
+        }
+
+        await OnInventorySelected.InvokeAsync(_productInventories);
+    }
+
+    private void RemoveInventory(ProductInventory productInventory)
+    {
+        _productInventories.Remove(productInventory);
+    }
+}
